@@ -35,4 +35,44 @@
 Исползуя знания о входе меню Edit, нажимаю клавишу "е" при загрузке. Нашел строку на linux16 изменил параметр ro  на rw init+/sysroot/bin/sh и нажал на ctrl+x.
 После загрузки системы получил корневую файловую систему в режиме RW.  
 
-**Устновка системы с LVM
+**Устновка системы с LVM, переименование VG** 
+
+Посмотрел текущее состояние системы:
+```
+[root@otuslinux ~]# vgs
+VG #PV #LV #SN Attr VSize VFree
+VolGroup00 1 2 0 wz--n- <38.97g 0
+```
+Определилися с целью переименования, переименовал командой:
+```
+[root@otuslinux ~]# vgrename VolGroup00 OtusRoot
+Volume group "VolGroup00" successfully renamed to "OtusRoot"
+```
+Далее отредактировал файл /etc/fstab, /etc/default/grub, /boot/grub2/grub.cfg.
+Пересоздал initrd image, чтобы он знал новое название Volume Group  
+```
+[root@otuslinux ~]# mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
+```
+После перезагрузил ос и проверил успешное переименование. 
+```
+[root@otuslinux ~]# vgs
+VG #PV #LV #SN Attr VSize VFree
+OtusRoot 1 2 0 wz--n- <38.97g 0
+```  
+**3. Добавление модуля в initrd.**  
+
+Пересобрал образ initrd.
+```
+[root@otuslinux ~]# mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
+или
+[root@otuslinux ~]# dracut -f -v
+```
+Проверил какие модули загрузены в образ:
+```
+[root@otuslinux ~]# lsinitrd -m /boot/initramfs-$(uname -r).img | grep test
+test
+```
+Перезагрузился и вручную выключил опцию rghb и quiet и увидел вывод в виде "пингвина".  
+
+
+ 
